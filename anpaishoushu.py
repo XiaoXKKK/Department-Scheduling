@@ -1,170 +1,36 @@
 import os
 import sys
 import easygui as E
+import xlrd
 import openpyxl
+import datetime
+import calendar
+import re
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment, Protection
-date_str = ''
 num_in_each_room = [0 for i in range(31)]
 col_index = [0 for i in range(31)]
+file_path = ''
+wb = None
+date = datetime.datetime.now().date()
 
-# room_partition=[['02间','03间','03A间'],
-#                 ['05间','06间'],
-#                 ['07间','08间','09间'],
-#                 ['10间','11间','12间'],
-#                 ['13间','13A间','15间','16间'],
-#                 ['17间','18间','19间'],
-#                 ['20间','21间'],
-#                 ['22间','23间','23A'],
-#                 ['25间','26间','27间'],
-#                 ['28间','29间'],
-#                 ['30间']]
-# 2-3a 5-6
-# 7-9,17-19
-# 13-16,10-12
-# 20 21,22,28,29
-# 23,25,26,27,30
+def data_collect(book):
+    type_list = []
+    name_list = []
+    sh=book.sheet_by_index(0)
+    for i in range(sh.nrows):
+        type_list.append(sh.cell_value(i,0))
+    for i in range(len(type_list)):
+        j=1
+        tmp=[]
+        for j in range(1,sh.ncols):
+            if sh.cell_type(i,j)==0:
+                continue
+            tmp.append(sh.cell_value(i,j))
+        name_list.append(tmp)
+    return (type_list,name_list)
 
-# class Assistant:
-
-#     AssCount = 0
-
-#     @classmethod
-#     def import_all(sh) -> list:
-#         all_assistant=[]
-#         for i in range(1,sh.nrows):
-#             if sh.cell_type(i,1)==0 :
-#                 continue
-#             tmp=[]
-#             for j in range(1,5):
-#                 tmp.append(sh.cell_value(i,j))
-#                 ass=Assistant(tmp)
-#                 print(ass)
-#                 all_assistant.append(ass)
-#         all_assistant.sort(reverse=True)
-#         return all_assistant
-
-#     def __init__(self,init_list) -> None:
-#         self.name=init_list[0]
-#         self.priority_num=init_list[1]
-#         self.mentor=init_list[2]
-#         self.section=init_list[3]
-#         Assistant.AssCount += 1
-
-#     def __eq__(self, __o: object) -> bool:
-#         return self.priority_num == __o.priority_num
-
-#     def __gt__(self, __o: object) -> bool:
-#         return self.priority_num > __o.priority_num
-
-#     def __lt__(self, __o: object) -> bool:
-#         return self.priority_num < __o.priority_num
-
-# class Doctor:
-
-#     DocCount = 0
-
-#     @classmethod
-#     def import_all(sh) -> list:
-#         all_doctor=[]
-#         for i in range(1,sh.nrows):
-#             if sh.cell_type(i,1)==0 :
-#                 continue
-#             tmp=[]
-#             for j in range(1,4):
-#                 tmp.append(sh.cell_value(i,j))
-#                 doc=Doctor(tmp)
-#                 print(doc)
-#                 all_doctor.append(doc)
-#         all_doctor.sort(reverse=True)
-#         return all_doctor
-
-#     def __init__(self,init_list) -> None:
-#         self.name=init_list[0]
-#         self.priority_num=init_list[1]
-#         self.section=init_list[2]
-#         Doctor.DocCount += 1
-
-#     def __eq__(self, __o: object) -> bool:
-#         return self.priority_num == __o.priority_num
-
-#     def __gt__(self, __o: object) -> bool:
-#         return self.priority_num > __o.priority_num
-
-#     def __lt__(self, __o: object) -> bool:
-#         return self.priority_num < __o.priority_num
-
-# class Room:
-
-#     last_now_num = 1
-
-#     def __init__(self,name,num,ward) -> None:
-#         name = name
-#         row_num = num
-#         ward = ward
-#         Surgery_num = Room.last_now_num-row_num
-#         Room.last_now_num = row_num
-
-#     def __eq__(self, __o: object) -> bool:
-#         return self.Surgery_num == __o.Surgery_num
-
-#     def __gt__(self, __o: object) -> bool:
-#         return self.Surgery_num > __o.Surgery_num
-
-#     def __lt__(self, __o: object) -> bool:
-#         return self.Surgery_num < __o.Surgery_num
-
-# def change_prior():
-#     pass
-
-# def filling_blanks(assistant,doctor):
-#     file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default='*.xlsx')
-#     schedule = xlrd.open_workbook(file_path)
-#     date_str = file_path[-15:-5]
-#     y = int(date_str[:4])
-#     m = int(date_str[5:7])
-#     d = int(date_str[-2:])
-#     sh = schedule.sheet_by_index(0)
-#     wb = xlutils.copy.copy(schedule)
-#     sheet1 = wb.get_sheet(0)
-#     #read
-#     #(name,row_id) -> list
-#     last = None
-#     rooms = []
-#     for i in range (2,sh.nrows):
-#         if sh.cell_type(i,0)==0 :
-#             break
-#         now = sh.cell_value(i,0)
-#         if now!=last:
-#             ward=sh.cell_value(i,3)
-#             rooms.append(Room(now,i,ward))
-#             last = now
-#     #doctor
-#     special  = [doc for doc in doctor if doc.section]
-#     for person in special:
-#         for room in rooms:
-#             if person.section == room.section:
-#                 sheet1.write(room.row_num, 14, doctor.name)
-#                 doctor.remove(person)
-#                 rooms.remove(room)
-#     for each in doctor:
-#         for room in rooms:
-#             pass
-
-#     #assistant
-
-
-#     #write
-
-
-#     wb.save(file_path)
-
-def del_lines():
+def del_lines(ws):
     #删除原表中多余信息
-    file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default='*.xlsx')
-    if file_path==None:
-        sys.exit()
-    wb = openpyxl.load_workbook(file_path)
-    ws = wb.active
     # ws.page_setup.fitToHeight = 1
     ws.unmerge_cells('A1:Q1')
     ws.delete_cols(14)#巡回护士
@@ -212,15 +78,94 @@ def del_lines():
     for i in range(1, ws.max_row+1):
         ws.row_dimensions[i].height = 28
 
-    new_str=file_path[:-5] + '(new).xlsx'
-    wb.save(new_str)
-    os.startfile(new_str)
-
 # def relieve():
 #     pass
 
+def avai_nextday(ws):
+    global date
+    type_list,name_list = data_collect(xlrd.open_workbook('data.xls',formatting_info=True))
+    doc_dict = dict(zip(type_list, name_list))
+    # print(doc_dict)
+    avai_doc=doc_dict['三线']+doc_dict['二线（白）']+doc_dict['一线']
+    avai_ass=doc_dict['学生-1']
+    print(avai_doc,avai_ass)
+    #去除请假人员
+    # date = datetime.datetime.now().date()
+    xls_name = str(date.year)+'年'+str(date.month)+'月值班表.xls'
+    if not os.path.isfile('./xls/'+xls_name):
+        E.msgbox(msg='找不到当月排班表！')
+        return
+    sh0=xlrd.open_workbook('./xls/'+xls_name).sheet_by_index(1)
+    date_list = calendar.monthcalendar(date.year,date.month)
+    qj = []
+    height = 10
+    for i in range(len(date_list)):
+        for j in range(7):
+            if date_list[i][j]==date.day:#请假
+                for k in range(1,10):
+                    qj.append(sh0.cell_value(i*(height+1)+2+k,j))
+    print(qj)
+    avai_doc=list(set(avai_doc)-set(qj))
+    avai_ass=list(set(avai_ass)-set(qj))
+    #去除下夜班人员
+    xyb,zb,bb = [],[],[]
+    sh1=xlrd.open_workbook('./xls/'+xls_name).sheet_by_index(0)
+    for i in range(len(date_list)):
+        for j in range(7):
+            if date_list[i][j]==date.day-1:#下夜班
+                for k in range(len(type_list)):
+                    xyb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
+            if date_list[i][j]==date.day:#值班
+                for k in range(len(type_list)):
+                    zb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
+            if date_list[i][j]==date.day+2:#备班
+                for k in range(len(type_list)):
+                    bb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
+    print(xyb)
+    avai_doc=list(set(avai_doc)-set(xyb))
+    avai_ass=list(set(avai_ass)-set(xyb))
+    print(avai_doc,avai_ass)
+    ws['A1']=date.strftime('%Y/%m/%d')
+    data = {'请假':qj,'下夜班':xyb,'值班':zb,'备班':bb,'可安排医师':avai_doc,'可安排助手':avai_ass}
+    for i,item in enumerate(data.keys()):
+        ws.cell(2,i+1).value=item
+    for i,l in enumerate(data.values()):
+        for j in range(len(l)):
+            ws.cell(3+j,i+1).value=l[j]
+            if i>3:
+                if l[j] in zb:
+                    ws.cell(3+j,i+1).font = Font(color='FF0000')
+                if l[j] in bb:
+                    ws.cell(3+j,i+1).font = Font(color='006400')
+
+def open_file():
+    global file_path,wb,date
+    file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default='*.xlsx')
+    if file_path==None:
+        sys.exit()
+    date = datetime.datetime.strptime(file_path[-16:-6],'%Y-%m-%d').date()
+    print(date)
+    wb = openpyxl.load_workbook(file_path)
+
+def save_file():
+    global file_path,wb
+    new_str=file_path[:-5] + '(new).xlsx'
+    flag=1
+    while flag:
+        try:
+            wb.save(new_str)
+            flag=0
+        except:
+            E.msgbox(msg='请先关闭用Excel打开的已生成的表格！')
+    os.startfile(new_str)
+
 def main():
-    del_lines()
+    global wb
+    # avai_nextday()
+    open_file()
+    del_lines(wb.active)
+    avai_nextday(wb.create_sheet('排班'))
+    save_file()
     # #init
     # data_path = E.fileopenbox(title='打开文件',msg='请选择数据文件',default='*.xls')
     # book = xlrd.open_workbook(data_path)
