@@ -20,7 +20,7 @@ date_list = calendar.monthcalendar(yy,mm)
 
 alignment = xlwt.Alignment()
 alignment.horz = 0x02
-alignment.vert = 0x01   
+alignment.vert = 0x01
 font0 = xlwt.Font()
 font0.name = u'仿宋'
 font0.height = 20*12
@@ -58,7 +58,7 @@ def data_collect(book):
             E.msgbox(msg=str(i+1)+' 行没有设置从谁开始轮班!请重新检查data.xls',title='错误')
             exit()
         name_list.append(tmp)
-        
+
 def print_struct(sh):
     sh.write(1,0,'WEEK' , style0)
     for j in range(7):
@@ -66,7 +66,7 @@ def print_struct(sh):
     for i in range(len(date_list)):
         if i<=4:
             sh.write(i*(len(type_list)+1)+2,0,'DAY' , style0)
-        
+
         for j in range(7):
             if date_list[i][j]:
                 if i<=4:
@@ -85,23 +85,29 @@ def suffle(l):
     tmp=name_list[l][0]
     name_list[l]=name_list[l][1:]
     name_list[l].append(tmp)
-    
+
 def print_names(sh):
 #    print("输入上月最后一天值班情况:\n")
 #    for i in range(len(type_list)):
 #        list_p.append(int(input(type_list[i]+':')))
+    day_save=[]
+    day_save.append([])
     for i in range(len(date_list)):
         for j in range(7):
             if date_list[i][j]:
+                tmp=[]
                 for k in range(len(type_list)):
+                    tmp.append(name_list[k][list_p[k]])
                     sh.write(i%5*(len(type_list)+1)+k+1+1+1,j+1,name_list[k][list_p[k]] , style0)
                     list_p[k]+=1
                     list_p[k]%=len(name_list[k])
                     if(j==6 and len(name_list[k])==7):
                         suffle(k)
+                day_save.append(tmp)
             elif(not i):
                 for k in range(len(type_list)):
                     sh.write(i%5*(len(type_list)+1)+k+1+1+1,j+1,'',style0)
+    print(day_save)
 
 def write_Title(sh):
     font=xlwt.Font()
@@ -109,13 +115,22 @@ def write_Title(sh):
     font.name=u'仿宋'
     font.bold=True
     pattern = xlwt.Pattern()
-    pattern.pattern = xlwt.Pattern.SOLID_PATTERN 
+    pattern.pattern = xlwt.Pattern.SOLID_PATTERN
     style=xlwt.XFStyle()
     style.font = font
     style.pattern = pattern
     style.alignment = alignment
     title='麻醉科'+str(yy)+'年'+str(mm)+'月排班表'
     sh.write_merge(0,0,0,7,title,style)
+
+def print_blanks(sh,height):
+    for j in range(7):
+        sh.write(1,j,week_name[j])
+    for i in range(len(date_list)):
+
+        for j in range(7):
+            if date_list[i][j]:
+                sh.write(i*(height+1)+2,j,date_list[i][j])
 
 def main():
     calendar.setfirstweekday(firstweekday=1)
@@ -124,7 +139,7 @@ def main():
         return
     data_collect(xlrd.open_workbook('data.xls',formatting_info=True))
     book=xlwt.Workbook()
-    sheet=book.add_sheet('sheet1',cell_overwrite_ok=True)
+    sheet=book.add_sheet('排程',cell_overwrite_ok=True)
     for i in range(8):
         sheet.col(i).width=256*12
     sheet.row(0).height_mismatch = True
@@ -132,6 +147,11 @@ def main():
     write_Title(sheet)
     print_struct(sheet)
     print_names(sheet)
+    sheet2=book.add_sheet('请假',cell_overwrite_ok=True)
+    style1=xlwt.XFStyle()
+    style1.alignment=alignment
+    sheet2.write_merge(0,0,0,6,'麻醉科'+str(yy)+'年'+str(mm)+'月请假表',style1)
+    print_blanks(sheet2,10)
     output_file=str(yy)+'年'+str(mm)+'月值班表.xls'
     flag=1
     while flag:
