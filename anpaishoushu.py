@@ -125,18 +125,23 @@ def avai_nextday(ws):
     avai_doc=list(set(avai_doc)-set(xyb))
     avai_ass=list(set(avai_ass)-set(xyb))
     print(avai_doc,avai_ass)
-    ws['A1']=date.strftime('%Y/%m/%d')
+    basx = ws.max_row+2
+    basy= ws.max_column-4
+    ws.cell(basx,basy).value=date.strftime('%Y/%m/%d')
+    ws.cell(basx,basy+1).value=date.day-1
+    ws.cell(basx,basy+2).value=date.day
+    ws.cell(basx,basy+3).value=date.day+2
     data = {'请假':qj,'下夜班':xyb,'值班':zb,'备班':bb,'可安排医师':avai_doc,'可安排助手':avai_ass}
     for i,item in enumerate(data.keys()):
-        ws.cell(2,i+1).value=item
+        ws.cell(basx+1,basy+i).value=item
     for i,l in enumerate(data.values()):
         for j in range(len(l)):
-            ws.cell(3+j,i+1).value=l[j]
+            ws.cell(basx+2+j,basy+i).value=l[j]
             if i>3:
                 if l[j] in zb:
-                    ws.cell(3+j,i+1).font = Font(color='FF0000')
+                    ws.cell(basx+2+j,basy+i).font = Font(color='FF0000')
                 if l[j] in bb:
-                    ws.cell(3+j,i+1).font = Font(color='006400')
+                    ws.cell(basx+2+j,basy+i).font = Font(color='006400')
 
 def open_file():
     global file_path,wb,date
@@ -164,7 +169,7 @@ def main():
     # avai_nextday()
     open_file()
     del_lines(wb.active)
-    avai_nextday(wb.create_sheet('排班'))
+    avai_nextday(wb.active)
     save_file()
     # #init
     # data_path = E.fileopenbox(title='打开文件',msg='请选择数据文件',default='*.xls')
