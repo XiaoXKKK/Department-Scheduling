@@ -12,6 +12,9 @@ col_index = [0 for i in range(31)]
 file_path = ''
 wb = None
 date = datetime.datetime.now().date()
+# WPSid=345470524
+# wps_path = os.environ['USERPROFILE']+'\\Documents\\WPSDrive\\'+str(WPSid)+'\\WPS云盘\\共享文~1\\群共享文件\\'
+wps_path = ''
 
 def data_collect(book):
     type_list = []
@@ -86,32 +89,24 @@ def avai_nextday(ws):
     type_list,name_list = data_collect(xlrd.open_workbook('data.xls',formatting_info=True))
     doc_dict = dict(zip(type_list, name_list))
     # print(doc_dict)
+    date_list = calendar.monthcalendar(date.year,date.month)
+
     avai_doc=doc_dict['三线']+doc_dict['二线（白）']+doc_dict['一线']
-    avai_ass=doc_dict['学生-1']
-    print(avai_doc,avai_ass)
-    #去除请假人员
-    # date = datetime.datetime.now().date()
+    print(avai_doc)
     xls_name = str(date.year)+'年'+str(date.month)+'月值班表.xls'
-    if not os.path.isfile('./xls/'+xls_name):
+    path_pb=wps_path+'\\群共享文件\\'+str(date.year)+'年值班表\\'+xls_name
+    if not os.path.isfile(path_pb):
+        print(path_pb)
         E.msgbox(msg='找不到当月排班表！')
         return
-    sh0=xlrd.open_workbook('./xls/'+xls_name).sheet_by_index(1)
-    date_list = calendar.monthcalendar(date.year,date.month)
-    qj = []
-    height = 10
-    for i in range(len(date_list)):
-        for j in range(7):
-            if date_list[i][j]==date.day:#请假
-                for k in range(1,10):
-                    qj.append(sh0.cell_value(i*(height+1)+2+k,j))
-    print(qj)
-    avai_doc=list(set(avai_doc)-set(qj))
-    avai_ass=list(set(avai_ass)-set(qj))
     #去除下夜班人员
-    xyb,zb,bb = [],[],[]
-    sh1=xlrd.open_workbook('./xls/'+xls_name).sheet_by_index(0)
+    hfs,xyb,zb,bb = [],[],[],[]
+    sh1=xlrd.open_workbook(path_pb).sheet_by_index(0)
     for i in range(len(date_list)):
         for j in range(7):
+            if date_list[i][j]==date.day-2:#for 恢复室
+                for k in range(len(type_list)):
+                    hfs.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
             if date_list[i][j]==date.day-1:#下夜班
                 for k in range(len(type_list)):
                     xyb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
@@ -122,33 +117,80 @@ def avai_nextday(ws):
                 for k in range(len(type_list)):
                     bb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
     print(xyb)
-    avai_doc=list(set(avai_doc)-set(xyb))
-    avai_ass=list(set(avai_ass)-set(xyb))
-    print(avai_doc,avai_ass)
+    for i in xyb:
+        if i in avai_doc:
+            avai_doc.remove(i)
+    print(avai_doc)
+    tmp=[]
+    for i in avai_doc:
+        tmp.append("".join(i.split()))
+    avai_doc=tmp
+    print(avai_doc)
+    #去除请假人员
+    qj = []
+    # date = datetime.datetime.now().date()
+    path_qj=wps_path+'\\群共享文件\\'+str(date.year)+'年请假表\\'+str(date.year)+'年'+str(date.month)+'月请假表.xls'
+    if not os.path.isfile(path_qj):
+        print(path_qj)
+        E.msgbox(msg='找不到当月请假表！')
+    else:
+        sh0 = xlrd.open_workbook(path_qj).sheet_by_index(0)
+        height = 10
+        for i in range(len(date_list)):
+            for j in range(7):
+                if date_list[i][j]==date.day:#请假
+                    for k in range(1,10):
+                        qj.append(sh0.cell_value(i*(height+1)+2+k,j))
+        print(qj)
+        for i in qj:
+            if i in avai_doc:
+                avai_doc.remove(i)
+    #打印信息
     basx = ws.max_row+2
     basy= ws.max_column-4
     ws.cell(basx,basy).value=date.strftime('%Y/%m/%d')
-    ws.cell(basx,basy+1).value=date.day-1
-    ws.cell(basx,basy+2).value=date.day
-    ws.cell(basx,basy+3).value=date.day+2
-    data = {'请假':qj,'下夜班':xyb,'值班':zb,'备班':bb,'可安排医师':avai_doc,'可安排助手':avai_ass}
+    ws.cell(basx,basy).font=Font(name=u'宋体', size=14, bold=True, color='FF0000')
+    ws.cell(basx+2,basy+2).value=date.day-2
+    ws.cell(basx+2,basy+2).font=Font(name=u'宋体', size=14)
+    ws.cell(basx+2,basy+2).alignment=Alignment('center','center')
+    ws.cell(basx+2,basy+3).value=date.day-1
+    ws.cell(basx+2,basy+3).font=Font(name=u'宋体', size=14)
+    ws.cell(basx+2,basy+3).alignment=Alignment('center','center')
+    ws.cell(basx+2,basy+4).value=date.day
+    ws.cell(basx+2,basy+4).font=Font(name=u'宋体', size=14)
+    ws.cell(basx+2,basy+4).alignment=Alignment('center','center')
+    ws.cell(basx+2,basy+5).value=date.day+2
+    ws.cell(basx+2,basy+5).font=Font(name=u'宋体', size=14)
+    ws.cell(basx+2,basy+5).alignment=Alignment('center','center')
+    data = {'请假':qj,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'胃镜':[],'恢复室':[],'':avai_doc}
     for i,item in enumerate(data.keys()):
         ws.cell(basx+1,basy+i).value=item
+        ws.cell(basx+1,basy+i).font=Font(name=u'宋体', size=14)
+        ws.cell(basx+1,basy+i).alignment=Alignment('center','center')
     for i,l in enumerate(data.values()):
         for j in range(len(l)):
-            ws.cell(basx+2+j,basy+i).value=l[j]
-            if i>3:
+            ws.cell(basx+3+j,basy+i).value=l[j]
+            ws.cell(basx+3+j,basy+i).font=Font(name=u'楷体', size=14)
+            ws.cell(basx+3+j,basy+i).alignment=Alignment('center','center')
+            if i>5:
                 if l[j] in zb:
-                    ws.cell(basx+2+j,basy+i).font = Font(color='FF0000')
-                if l[j] in bb:
-                    ws.cell(basx+2+j,basy+i).font = Font(color='006400')
+                    ws.cell(basx+3+j,basy+i).font = Font(name=u'楷体', size=14, color='006400')
+    for i in range(basx, ws.max_row+1):
+        ws.row_dimensions[i].height = 17.5
 
 def open_file():
-    global file_path,wb,date
+    global file_path,wb,date,wps_path
+    # file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default=os.environ['USERPROFILE']+'\\Documents\\WPSDrive\\'+str(WPSid)+'\\WPS云盘\\共享文~1\\手术排班共享\\*.xlsx')
     file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default='*.xlsx')
+    wps_path = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
+    print(wps_path)
     if file_path==None:
         sys.exit()
-    date = datetime.datetime.strptime(file_path[-16:-6],'%Y-%m-%d').date()
+    try:
+        date = datetime.datetime.strptime(file_path[-16:-6],'%Y-%m-%d').date()
+    except:
+        E.msgbox(msg='无法解析表格时间，请检查是否选错文件')
+        sys.exit()
     print(date)
     wb = openpyxl.load_workbook(file_path)
 
@@ -160,8 +202,16 @@ def save_file():
         try:
             wb.save(new_str)
             flag=0
-        except:
-            E.msgbox(msg='请先关闭用Excel打开的已生成的表格！')
+        except PermissionError as e:
+            r=E.msgbox(msg=repr(e)+'\n\n文件可能正在被其他应用或其他人占用！')
+            if r is None:
+                return
+        except FileNotFoundError as e:
+            r=E.msgbox(msg=repr(e)+'\n\n文件保存路径路径错误！')
+            return
+        except Exception as e:
+            r=E.msgbox(msg=repr(e))
+            return
     os.startfile(new_str)
 
 def main():
