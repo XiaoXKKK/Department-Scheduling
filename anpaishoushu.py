@@ -166,6 +166,11 @@ def avai_nextday(ws):
     ws.cell(basx+2,basy+5).font=Font(name=u'宋体', size=14)
     ws.cell(basx+2,basy+5).alignment=Alignment('center','center')
     data = {'请假':qj,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'胃镜':[],'恢复室':[],'':avai_doc}
+    tmp=[]
+    for i in zb:
+        tmp.append("".join(i.split()))
+    zb=tmp
+    print(zb)
     for i,item in enumerate(data.keys()):
         ws.cell(basx+1,basy+i).value=item
         ws.cell(basx+1,basy+i).font=Font(name=u'宋体', size=14)
