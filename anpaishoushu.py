@@ -86,6 +86,9 @@ def del_lines(ws):
 
 def avai_nextday(ws):
     global date
+    if not os.path.isfile('data.xls'):
+        E.msgbox(msg='没有准备数据库文件！（data.xls）')
+        sys.exit()
     type_list,name_list = data_collect(xlrd.open_workbook('data.xls',formatting_info=True))
     doc_dict = dict(zip(type_list, name_list))
     # print(doc_dict)
@@ -181,11 +184,11 @@ def avai_nextday(ws):
 def open_file():
     global file_path,wb,date,wps_path
     # file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default=os.environ['USERPROFILE']+'\\Documents\\WPSDrive\\'+str(WPSid)+'\\WPS云盘\\共享文~1\\手术排班共享\\*.xlsx')
-    file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格',default='*.xlsx')
-    wps_path = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
-    print(wps_path)
+    file_path = E.fileopenbox(title='打开文件',msg='打开要填写的表格')
     if file_path==None:
         sys.exit()
+    wps_path = os.path.dirname(os.path.dirname(os.path.dirname(file_path)))
+    print(wps_path)
     try:
         date = datetime.datetime.strptime(file_path[-16:-6],'%Y-%m-%d').date()
     except:
