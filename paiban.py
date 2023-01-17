@@ -4,6 +4,7 @@ import xlutils
 import calendar
 import easygui as E
 import os
+import sys
 
 week_name = ['星期一','星期二','星期三','星期四','星期五','星期六','星期日']
 type_list = []
@@ -17,6 +18,8 @@ mm = E.integerbox(msg="输入月份: (1~12)",title='读取信息',lowerbound=1,u
 if not mm:
     exit()
 date_list = calendar.monthcalendar(yy,mm)
+WPSid=345470524
+wps_path = os.environ['USERPROFILE']+'\\Documents\\WPSDrive\\'+str(WPSid)+'\\WPS云盘\\共享文~1\\群共享文件\\'
 
 alignment = xlwt.Alignment()
 alignment.horz = 0x02
@@ -132,12 +135,41 @@ def print_blanks(sh,height):
             if date_list[i][j]:
                 sh.write(i*(height+1)+2,j,date_list[i][j])
 
+def save_file(wb,file_path):
+    flag=1
+    dir_name=os.path.dirname(wps_path + file_path)
+    file_name=os.path.basename(wps_path + file_path)
+    if os.path.isfile(wps_path + file_path):
+        if not E.ccbox(msg='当前路径：'+dir_name+'\n已有同名表格:'+file_name+'，是否覆盖？',choices=('是','否')):
+            return
+    while flag:
+        try:
+            wb.save(wps_path + file_path)
+            flag=0
+        except PermissionError as e:
+            r=E.msgbox(msg=repr(e)+'\n\n文件可能正在被其他应用或其他人占用！')
+            if r is None:
+                return
+        except FileNotFoundError as e:
+            r=E.msgbox(msg=repr(e)+'\n\n路径错误！请检查路径选择在“群共享文件”一级')
+            return
+        except Exception as e:
+            r=E.msgbox(msg=repr(e))
+            return
+    os.startfile(wps_path + file_path)
+
+
 def main():
+    global wps_path
     calendar.setfirstweekday(firstweekday=1)
     if not os.path.isfile('data.xls'):
         E.msgbox(msg='没有准备数据库文件！（data.xls）')
         return
     data_collect(xlrd.open_workbook('data.xls',formatting_info=True))
+    wps_path = E.diropenbox(title='打开存储文件夹',msg='打开表格存储位置')
+    print(wps_path)
+    if wps_path==None:
+        sys.exit()
     book=xlwt.Workbook()
     sheet=book.add_sheet('排程',cell_overwrite_ok=True)
     for i in range(8):
@@ -147,21 +179,14 @@ def main():
     write_Title(sheet)
     print_struct(sheet)
     print_names(sheet)
-    sheet2=book.add_sheet('请假',cell_overwrite_ok=True)
+    book2=xlwt.Workbook()
+    sheet2=book2.add_sheet('请假',cell_overwrite_ok=True)
     style1=xlwt.XFStyle()
     style1.alignment=alignment
     sheet2.write_merge(0,0,0,6,'麻醉科'+str(yy)+'年'+str(mm)+'月请假表',style1)
     print_blanks(sheet2,10)
-    output_file=str(yy)+'年'+str(mm)+'月值班表.xls'
-    flag=1
-    while flag:
-        try:
-            book.save(output_file)
-            flag=0
-        except:
-            E.msgbox(msg='请先关闭用Excel打开的已生成的表格！')
-    os.startfile(output_file)
-
+    save_file(book,'\\'+str(yy)+'年值班表\\'+str(yy)+'年'+str(mm)+'月值班表.xls')
+    save_file(book2,'\\'+str(yy)+'年请假表\\'+str(yy)+'年'+str(mm)+'月请假表.xls')
 if __name__=='__main__':
     main()
 
