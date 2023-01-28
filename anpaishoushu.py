@@ -84,6 +84,33 @@ def del_lines(ws):
 # def relieve():
 #     pass
 
+def write_cell(ws,x,y,s,fn=u'宋体',fs=14):
+    ws.cell(x,y).font=Font(name=fn, size=fs)
+    ws.cell(x,y).alignment=Alignment('center','center')
+    ws.cell(x,y).value=s
+
+def get_oneday(sh,delta,type_list) -> list:
+    global date
+    oneday = date + datetime.timedelta(days=delta)
+    date_list = calendar.monthcalendar(oneday.year,oneday.month)
+    tmp = []
+    if oneday.year==date.year and oneday.month==date.month:
+        pass
+    else:
+        xls_name = str(oneday.year)+'年'+str(oneday.month)+'月值班表.xls'
+        path_pb=wps_path+'\\群共享文件\\'+str(oneday.year)+'年值班表\\'+xls_name
+        if not os.path.isfile(path_pb):
+            print(path_pb)
+            E.msgbox(msg='需要采集{}年{}月信息，找不到当月排班表！'.format(oneday.year,oneday.month))
+            return []
+        sh=xlrd.open_workbook(path_pb).sheet_by_index(0)
+    for i in range(len(date_list)):
+        for j in range(7):
+            if date_list[i][j]==oneday.day:
+                for k in range(len(type_list)):
+                    tmp.append(sh.cell_value(i*(len(type_list)+1)+k+1+1+1,j+1))
+    return tmp
+
 def avai_nextday(ws):
     global date
     if not os.path.isfile('data.xls'):
@@ -103,22 +130,11 @@ def avai_nextday(ws):
         E.msgbox(msg='找不到当月排班表！')
         return
     #去除下夜班人员
-    hfs,xyb,zb,bb = [],[],[],[]
-    sh1=xlrd.open_workbook(path_pb).sheet_by_index(0)
-    for i in range(len(date_list)):
-        for j in range(7):
-            if date_list[i][j]==date.day-2:#for 恢复室
-                for k in range(len(type_list)):
-                    hfs.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
-            if date_list[i][j]==date.day-1:#下夜班
-                for k in range(len(type_list)):
-                    xyb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
-            if date_list[i][j]==date.day:#值班
-                for k in range(len(type_list)):
-                    zb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
-            if date_list[i][j]==date.day+2:#备班
-                for k in range(len(type_list)):
-                    bb.append(sh1.cell_value(i%5*(len(type_list)+1)+k+1+1+1,j+1))
+    sh1 = xlrd.open_workbook(path_pb).sheet_by_index(0)
+    hfs = get_oneday(sh1,-2,type_list)#for 恢复室
+    xyb = get_oneday(sh1,-1,type_list)#下夜班
+    zb = get_oneday(sh1,0,type_list)#值班
+    bb = get_oneday(sh1,2,type_list)#备班
     print(xyb)
     for i in xyb:
         if i in avai_doc:
@@ -143,8 +159,12 @@ def avai_nextday(ws):
             for j in range(7):
                 if date_list[i][j]==date.day:#请假
                     for k in range(1,10):
-                        qj.append(sh0.cell_value(i*(height+1)+2+k,j))
+                        try:
+                            qj.append(sh0.cell_value(i*(height+1)+2+k,j))
+                        except:
+                            break
         print(qj)
+        qj = list(filter(lambda x:x, qj))
         for i in qj:
             if i in avai_doc:
                 avai_doc.remove(i)
@@ -153,19 +173,17 @@ def avai_nextday(ws):
     basy= ws.max_column-4
     ws.cell(basx,basy).value=date.strftime('%Y/%m/%d')
     ws.cell(basx,basy).font=Font(name=u'宋体', size=14, bold=True, color='FF0000')
-    ws.cell(basx+2,basy+2).value=date.day-2
-    ws.cell(basx+2,basy+2).font=Font(name=u'宋体', size=14)
-    ws.cell(basx+2,basy+2).alignment=Alignment('center','center')
-    ws.cell(basx+2,basy+3).value=date.day-1
-    ws.cell(basx+2,basy+3).font=Font(name=u'宋体', size=14)
-    ws.cell(basx+2,basy+3).alignment=Alignment('center','center')
-    ws.cell(basx+2,basy+4).value=date.day
-    ws.cell(basx+2,basy+4).font=Font(name=u'宋体', size=14)
-    ws.cell(basx+2,basy+4).alignment=Alignment('center','center')
-    ws.cell(basx+2,basy+5).value=date.day+2
-    ws.cell(basx+2,basy+5).font=Font(name=u'宋体', size=14)
-    ws.cell(basx+2,basy+5).alignment=Alignment('center','center')
-    data = {'请假':qj,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'胃镜':[],'恢复室':[],'':avai_doc}
+    write_cell(ws,basx+2,basy+2,(date-datetime.timedelta(2)).day)
+    write_cell(ws,basx+2,basy+3,(date-datetime.timedelta(1)).day)
+    write_cell(ws,basx+2,basy+4,date.day)
+    write_cell(ws,basx+2,basy+5,(date+datetime.timedelta(2)).day)
+    write_cell(ws,basx+2,basy+6,'通道1')
+    write_cell(ws,basx+2,basy+7,'通道2')
+    #胃镜恢复室
+    write_cell(ws,basx+3,basy+6,hfs[2],fn=u'楷体')
+    write_cell(ws,basx+3,basy+7,'席宏',fn=u'楷体')
+    write_cell(ws,basx+3,basy+8,hfs[3],fn=u'楷体')
+    data = {'请假':qj+['---']+avai_doc,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'胃镜':[],'':[],'恢复室':[]}
     tmp=[]
     for i in zb:
         tmp.append("".join(i.split()))
@@ -180,11 +198,13 @@ def avai_nextday(ws):
             ws.cell(basx+3+j,basy+i).value=l[j]
             ws.cell(basx+3+j,basy+i).font=Font(name=u'楷体', size=14)
             ws.cell(basx+3+j,basy+i).alignment=Alignment('center','center')
-            if i>5:
-                if l[j] in zb:
-                    ws.cell(basx+3+j,basy+i).font = Font(name=u'楷体', size=14, color='006400')
+            if i==0 and l[j] in zb:
+                ws.cell(basx+3+j,basy+i).font = Font(name=u'楷体', size=14, color='006400')
     for i in range(basx, ws.max_row+1):
         ws.row_dimensions[i].height = 17.5
+    ws.column_dimensions["O"].weight = 12
+    ws.column_dimensions["P"].weight = 12
+    ws.merge_cells('O{}:P{}'.format(basx+1,basx+1))
 
 def open_file():
     global file_path,wb,date,wps_path
