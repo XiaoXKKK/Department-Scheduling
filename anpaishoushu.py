@@ -57,8 +57,21 @@ def del_lines(ws):
         row[10].alignment=Alignment('center','center')
         row[11].alignment=Alignment('center','center')
         room_name=row[0].value
-        vis_name.add(room_name);
+        # 分隔线
+        if room_name not in vis_name:
+            for each in row:
+                each.border=border = Border(left=Side(border_style='thin',color='000000'), \
+                    right=Side(border_style='thin',color='000000'), \
+                    top=Side(border_style='thick',color='000000'), \
+                    bottom=Side(border_style='thin',color='000000'))
+        vis_name.add(room_name)
         row[0].fill=PatternFill('solid',fgColor=colors[len(vis_name)%2])
+        # 年龄警示
+        age = row[6].value
+        num = int("".join(list(filter(str.isdigit,age))))
+        if '月' in age or num<=3 or num>=80:
+            row[6].fill=PatternFill('solid',fgColor='ff0000')
+        # 区分心脏
         # flag=0
         # for i,each in enumerate(room_partition):
         #     if room_name in each:
