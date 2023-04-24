@@ -30,3 +30,16 @@ jobs:
     - name: Build with pyinstaller
       run: |
         pyinstaller -Fw anpaishoushu.py
+    - name: Package 
+      run: |
+        tar -a -c -f Windows.zip ./dist/**
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        prerelease: true
+        files: |
+          Windows.zip
+        name: test GhRelease
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
