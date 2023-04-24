@@ -3,13 +3,9 @@
 
 name: Python application
 
-on:
-  push:
-    tags:
-      - "*"
+on: [ push ]
 
-permissions:
-  contents: read
+permissions: read-all | write-all
 
 jobs:
   build:
@@ -37,7 +33,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         draft: false
-        prerelease: true
+        prerelease: false
         files: |
           Windows.zip
         name: test GhRelease
