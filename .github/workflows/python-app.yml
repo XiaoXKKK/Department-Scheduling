@@ -34,11 +34,10 @@ jobs:
         tar -a -c -f Windows.zip ./dist/**
     - name: Create Release
       uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
       with:
         draft: false
         prerelease: true
         files: |
           Windows.zip
         name: test GhRelease
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
