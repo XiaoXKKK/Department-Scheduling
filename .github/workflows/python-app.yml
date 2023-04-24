@@ -3,7 +3,10 @@
 
 name: Python application
 
-on: [ push ]
+on:
+  push:
+    tags:
+      "v*"
 
 permissions: write-all
 
@@ -25,15 +28,14 @@ jobs:
     - name: Build with pyinstaller
       run: |
         pyinstaller -Fw anpaishoushu.py
+        pyinstaller -Fw paiban.py
     - name: Package 
       run: |
-        tar -a -c -f Windows.zip ./dist/**
+        tar -a -c -f Windows.zip -C ./dist/ anpaishoushu.exe paiban.exe
     - name: Create Release
       uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       with:
         draft: false
         prerelease: false
         files: |
           Windows.zip
-        name: test GhRelease
