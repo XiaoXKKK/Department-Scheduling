@@ -175,7 +175,7 @@ def avai_nextday(ws):
                         try:
                             qj.append(sh0.cell_value(i*(height+1)+2+k,j))
                         except:
-                            break
+                            continue
         print(qj)
         qj = list(filter(lambda x:x, qj))
         for i in qj:
@@ -190,13 +190,12 @@ def avai_nextday(ws):
     write_cell(ws,basx+2,basy+3,(date-datetime.timedelta(1)).day)
     write_cell(ws,basx+2,basy+4,date.day)
     write_cell(ws,basx+2,basy+5,(date+datetime.timedelta(2)).day)
-    write_cell(ws,basx+2,basy+6,'通道1')
-    write_cell(ws,basx+2,basy+7,'通道2')
+    # write_cell(ws,basx+2,basy+6,'通道1')
+    # write_cell(ws,basx+2,basy+7,'通道2')
     #胃镜恢复室
-    write_cell(ws,basx+3,basy+6,hfs[2],fn=u'楷体')
-    write_cell(ws,basx+3,basy+7,'席宏',fn=u'楷体')
-    write_cell(ws,basx+3,basy+8,hfs[3],fn=u'楷体')
-    data = {'请假':qj+['---']+avai_doc,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'胃镜':[],'':[],'恢复室':[]}
+    # write_cell(ws,basx+3,basy+6,hfs[2],fn=u'楷体')
+    # write_cell(ws,basx+3,basy+8,hfs[3],fn=u'楷体')
+    data = {'请假':qj+['---']+avai_doc,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'麻醉门诊及胃镜':[],'恢复室':[]}
     tmp=[]
     for i in zb:
         tmp.append("".join(i.split()))
@@ -215,9 +214,9 @@ def avai_nextday(ws):
                 ws.cell(basx+3+j,basy+i).font = Font(name=u'楷体', size=14, color='006400')
     for i in range(basx, ws.max_row+1):
         ws.row_dimensions[i].height = 17.5
-    ws.column_dimensions["O"].weight = 12
-    ws.column_dimensions["P"].weight = 12
-    ws.merge_cells('O{}:P{}'.format(basx+1,basx+1))
+    # ws.column_dimensions["O"].weight = 12
+    # ws.column_dimensions["P"].weight = 12
+    # ws.merge_cells('O{}:P{}'.format(basx+1,basx+1))
 
 def open_file():
     global file_path,wb,date,wps_path
