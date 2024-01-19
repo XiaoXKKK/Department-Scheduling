@@ -192,10 +192,10 @@ def avai_nextday(ws):
     write_cell(ws,basx+2,basy+5,(date+datetime.timedelta(2)).day)
     # write_cell(ws,basx+2,basy+6,'通道1')
     # write_cell(ws,basx+2,basy+7,'通道2')
-    #胃镜恢复室
+    # 胃镜恢复室
     # write_cell(ws,basx+3,basy+6,hfs[2],fn=u'楷体')
-    # write_cell(ws,basx+3,basy+8,hfs[3],fn=u'楷体')
-    data = {'请假':qj+['---']+avai_doc,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'麻醉门诊及胃镜':[],'恢复室':[]}
+    write_cell(ws,basx+3,basy+7,hfs[3],fn=u'楷体')
+    data = {'请假':qj+['---']+avai_doc,' ':type_list,'  ':hfs,'下夜班':xyb,'值班':zb,'备班':bb,'麻醉门诊及胃镜':[],'恢复室':[],'人流室':[]}
     tmp=[]
     for i in zb:
         tmp.append("".join(i.split()))
