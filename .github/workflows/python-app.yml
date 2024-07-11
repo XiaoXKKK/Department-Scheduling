@@ -8,15 +8,13 @@ on:
     tags:
       "v*"
 
-permissions: write-all
-
 jobs:
   build:
 
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python 3.10
       uses: actions/setup-python@v3
       with:
@@ -31,9 +29,11 @@ jobs:
         pyinstaller -Fw paiban.py
     - name: Package 
       run: |
-        tar -a -c -f Windows.zip -C ./dist/ anpaishoushu.exe paiban.exe
+        tar -cf Windows.zip -C ./dist/ anpaishoushu.exe paiban.exe
     - name: Create Release
       uses: softprops/action-gh-release@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         draft: false
         prerelease: false
