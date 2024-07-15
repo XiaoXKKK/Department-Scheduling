@@ -18,8 +18,6 @@ mm = E.integerbox(msg="输入月份: (1~12)",title='读取信息',lowerbound=1,u
 if not mm:
     exit()
 date_list = calendar.monthcalendar(yy,mm)
-WPSid=345470524
-wps_path = os.environ['USERPROFILE']+'\\Documents\\WPSDrive\\'+str(WPSid)+'\\WPS云盘\\共享文~1\\群共享文件\\'
 
 alignment = xlwt.Alignment()
 alignment.horz = 0x02

@@ -12,7 +12,7 @@ col_index = [0 for i in range(31)]
 file_path = ''
 wb = None
 date = datetime.datetime.now().date()
-# WPSid=345470524
+
 # wps_path = os.environ['USERPROFILE']+'\\Documents\\WPSDrive\\'+str(WPSid)+'\\WPS云盘\\共享文~1\\群共享文件\\'
 wps_path = ''
 
@@ -269,5 +269,5 @@ def main():
 
     # filling_blanks(assistant,doctor)
 
-if(__name__=='__main__'):
+if __name__=='__main__':
     main()
